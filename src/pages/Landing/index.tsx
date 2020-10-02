@@ -39,7 +39,7 @@ function Landing() {
                 </div>
 
                 <span className="total-connections">
-                    Feito com <img src={purpleHeartIcon} alt="coração roxo"/> por Everton e Paulo
+                    Feito com <img src={purpleHeartIcon} alt="coração roxo"/> por <a target="_blank" href="https://instagram.com/evertonti"> Everton</a> e <a target="_blank" href="https://instagram.com/xpaulocesarx"> Paulo</a>
                 </span>
             </div>
         </div>

@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 
 import './styles.css';
 
+import { useAuth } from "../../hooks/AuthContext";
+
 import logoImg from '../../assets/images/logo.svg';
 import logoutIcon from '../../assets/images/icons/log-out.svg'
 
@@ -14,6 +16,7 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 
 const Reservation: React.FC = () => {
+    const { signOut } = useAuth();
     const [open, setOpen] = useState(false);
     const [selectedHours, setSelectedHours] = useState(false);
     const [nameSemana, setNameSemana] = useState('');
@@ -43,11 +46,10 @@ const Reservation: React.FC = () => {
     }, []);
 
     return (
-        
         <div id="page-reservation" className="container">
             <header className="page-header">
                 <img src={logoImg} alt="UniVS" />
-                <Link to="#">
+                <Link to="#" onClick={signOut}>
                     <img src={logoutIcon} alt="Logout" /> Sair
                 </Link>
             </header>

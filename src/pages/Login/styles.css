@@ -16,19 +16,6 @@
     flex-direction: column;
 }
 
-.form-login input {
-    margin-bottom: 1.6rem;
-    width: 100%;
-    height: 5.6rem;
-    border-radius: 0.8rem;
-    background: #fff;
-    border: 1px solid#cacad1;
-    outline: 0;
-    padding: 0 1.6rem;
-    font: 1.8rem Archivo;
-    color: #333333;
-}
-
 .form-login button {
     width: 100%;
     height: 5.6rem;
