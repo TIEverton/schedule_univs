@@ -6,26 +6,32 @@
 .page-header {
     width: 90%;
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     margin: 0 auto;
     align-items: center;
     padding: 2.6rem 0;
 }
 
-.page-header > img {
+.header-logo-logout {
+    width: 90%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-logo-logout > img {
     height: 7.6rem;
 }
 
-.page-header a {
-    border-radius: 0.8rem;
-    font: 700 1.6rem Archivo;
+.logout-desktop {
+    display: none;
+}
 
+.logout-mobile {
     display: flex;
-    align-items: center;
     justify-content: center;
-
-    text-decoration: none;
-    color: #505050;
+    align-items: center;
 }
 
 main {
@@ -74,6 +80,15 @@ main .main-item-menu {
     background: #c7c7c7;
 }
 
+#name-user {
+    margin-top: 1.6rem;
+    color: #0E3A62;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    font-size: 1.8rem;
+}
+
 main .main-content-reservation {
     display: grid;
     justify-content: center;
@@ -115,7 +130,7 @@ main .main-content-reservation {
 
 #alert-dialog-description-dashboard p{
     font-size: 1.8rem;
-    color: #717171;
+    color: #505050;
 }
 
 #alert-dialog-description-dashboard hr {
@@ -123,17 +138,83 @@ main .main-content-reservation {
     margin-bottom: 1rem;
 }
 
-#alert-dialog-description-dashboard button {
-    font-size: 1.2rem;
-}
-
-.teste {
+.reservation-color {
     background-color: #219653;
     color: #fff;
 }
 
+.unavailable {
+    background-color: #C64848;
+    color: #fff;
+    cursor: auto;
+}
+
+#alert-dialog-title p{
+    font-size: 2.2rem;
+    color: #242424;
+}
+
+#btn-confirm-modal {
+    color: green;
+    font-size: 1.6rem;
+}
+
+#btn-exit-modal {
+    font-size: 1.6rem;
+}
+
+#alert-dialog-description p{
+    font-size: 1.6rem;
+    color: #505050;
+}
+
+#description-laboratories {
+    height: 50vh;
+    font-size: 2rem;
+    color: #505050;
+    display: flex;
+    font-weight: 700;
+    justify-content: center;
+    align-items: center;
+}
+
+.container-user-list {
+    color: #505050;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    background: #c7c7c7;
+    padding: 2rem;
+    margin-bottom: 1rem;
+}
+
+.button-container-list {
+    display: flex;
+    padding-left: 4rem;
+}
 
 @media (min-width: 1100px){
+    .header-logo-logout { 
+        width: 0;
+    }
+
+    .logout-mobile {
+        display: none;
+    }
+
+    .logout-desktop{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 2rem;
+        color: #505050;
+    }
+
+    .page-header {
+        flex-direction: row;  
+        justify-content: space-between;
+    }
     #page-reservation{
         max-width: 1100px;
     }

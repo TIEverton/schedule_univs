@@ -6,4 +6,4 @@ const api = axios.create({
 
 export default api;
 
-//https://api-foodnow.herokuapp.com/api/v1
+//https://api-scheduleunivs.herokuapp.com

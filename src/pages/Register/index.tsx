@@ -47,6 +47,7 @@ const Register: React.FC = () => {
     function handleCourses(event:  ChangeEvent<HTMLSelectElement>){
         const id = event.target.value;
         setSelectCourses(parseInt(id));
+        console.log(selectCourses)
     }
 
     async function handleSubmit(data: FormAttributes){ 

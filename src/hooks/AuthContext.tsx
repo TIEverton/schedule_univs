@@ -3,6 +3,8 @@ import api from "../services/api";
 
 interface User {
   id: string;
+  name: string;
+  course_id: string;
   registration: string;
   user_type_id: number;
 }

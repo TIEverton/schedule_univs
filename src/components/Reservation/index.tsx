@@ -1,9 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { ChangeEvent, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import './styles.css';
 
 import { useAuth } from "../../hooks/AuthContext";
+import { useToast } from "../../hooks/ToastContext";
+
+import api from '../../services/api';
 
 import logoImg from '../../assets/images/logo.svg';
 import logoutIcon from '../../assets/images/icons/log-out.svg'
@@ -15,24 +18,118 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 
+interface ItemLaboratory {
+    id: string;
+    name: string;
+}
+
+interface ItemSchedule {
+    id: number;
+    laboratory_id: string,
+    ranger_time: string, 
+    vacancies: number,
+    users: Object[]
+}
+
 const Reservation: React.FC = () => {
-    const { signOut } = useAuth();
+    const { signOut, user } = useAuth();
+    const { addToast } = useToast();
     const [open, setOpen] = useState(false);
-    const [selectedHours, setSelectedHours] = useState(false);
+    const [openDelete, setOpenDelete] = useState(false);
+
     const [nameSemana, setNameSemana] = useState('');
 
-    function handleClickOpen() {
-      setOpen(true);
+    const [selectLaboratories, setSelectLaboratories] = useState<number>(0);
+    const [laboratories, setLaboratories] = useState<ItemLaboratory[]>([]);
+
+    const [schedules, setSchedules] = useState<ItemSchedule[]>([]);
+    const [selectSchedules, setSelectSchedules] = useState<ItemSchedule>();
+
+    useEffect(() => {
+        async function loadLaboratories() {
+            const response = await api.get('laboratories');
+            setLaboratories(response.data);
+        }
+
+        loadLaboratories();
+    }, []);
+
+    useEffect(() => {
+        async function loadSchedule() {
+            const response = await api.get(`reservations/${selectLaboratories}`);
+            setSchedules(response.data);
+        }
+
+        loadSchedule();
+    }, [selectLaboratories]);
+
+    function handleLaboratory(event:  ChangeEvent<HTMLSelectElement>){
+        const id = event.target.value;
+        setSelectLaboratories(parseInt(id));
+    }
+
+    function handleClickOpen(id: number) {
+        schedules.map(schedule => {
+            if (schedule.id === id) {
+                setSelectSchedules(schedule);
+            }
+        })
+        setOpen(true);
     };
+
+    function handleClickDelete(id: number) {
+        schedules.map(schedule => {
+            if (schedule.id === id) {
+                setSelectSchedules(schedule);
+            }
+        })
+        setOpenDelete(true);
+    }
   
     function handleClose() {
       setOpen(false);
+      setOpenDelete(false);
     };
 
-    function handleConfirm() {
-        setSelectedHours(true);
-        setOpen(false);
+    async function handleConfirm() {
+        try {
+            await api.post('reservations', { schedule_id: selectSchedules?.id });
+            const resp = await api.get(`reservations/${selectSchedules?.laboratory_id}`);
+            setSchedules(resp.data);
+            setOpen(false);
+
+            addToast({
+                type: "success",
+                title: "Reserva feita",
+                description: "Sua reserva foi confirmada com sucesso.",
+            });
+        } catch (err) {
+            addToast({
+                type: "error",
+                title: "Erro ao reservar",
+                description: "Esse horário não tem mais vagas.",
+            });
+        }
     };
+
+    async function handleConfirmDelete() {
+        try {
+            const deleteMessage = await api.delete(`reservations/${selectSchedules?.id}`);
+            const resp = await api.get(`reservations/${selectSchedules?.laboratory_id}`);
+            setSchedules(resp.data);
+            setOpenDelete(false);
+            addToast({
+                type: "success",
+                title: "Horário excluído",
+                description: deleteMessage.data.message,
+            });
+        } catch (err) {
+            addToast({
+                type: "error",
+                title: "Erro ao excluir",
+            });
+        }
+    }
 
     var data = new Date();
     var dias = new Array(
@@ -48,26 +145,62 @@ const Reservation: React.FC = () => {
     return (
         <div id="page-reservation" className="container">
             <header className="page-header">
-                <img src={logoImg} alt="UniVS" />
-                <Link to="#" onClick={signOut}>
-                    <img src={logoutIcon} alt="Logout" /> Sair
-                </Link>
+                <div className="header-logo-logout">
+                    <img src={logoImg} alt="UniVS" />
+                    <Link to="#" className="logout-mobile" onClick={signOut}>
+                            <img src={logoutIcon} alt="Logout" title="Sair"/>
+                    </Link> 
+                </div>
+                <p id="name-user">
+                    <p>Olá, <strong>{user.name}</strong></p>             
+                    <Link to="#" className="logout-desktop" onClick={signOut}>
+                        <img src={logoutIcon} alt="Logout" title="Sair"/>
+                    </Link> 
+                </p>   
             </header>
             <main>
                 <div className="main-item-menu">
                     <p id="name-week">Hoje é <b> {nameSemana}</b></p>
-                    <select>
-                        <option>Laborátorio 1</option>
-                        <option>Laborátorio 2</option>
-                        <option>Laborátorio 3</option>
+                    <select onChange={ handleLaboratory } value={selectLaboratories}>
+                        <option value={0}> Selecione aqui o laborátorio</option>
+                            { laboratories.map(laboratory => (
+                                <option key={laboratory.id} value={laboratory.id}>{laboratory.name}</option>
+                        )) }
                     </select>
                 </div>
-                <ul className="main-content-reservation">
-                    <li  className={selectedHours ? "caixa teste" : "caixa"} id="caixa1" onClick={handleClickOpen}>
-                        <p><b>07:00 - 08:00</b></p>
-                        <p>15 vagas</p>
-                    </li>
-                </ul>
+                {
+                    selectLaboratories !== 0 ? (
+                        <ul className="main-content-reservation">
+                            { schedules.map(schedule => (
+                                schedule.users.length > 0 ? (
+                                    <li  className="caixa reservation-color"  onClick={() => handleClickDelete(schedule.id)}>
+                                        <p><b>{schedule.ranger_time}</b></p>
+                                        <p>{schedule.vacancies} vagas</p>
+                                    </li> 
+                                ) 
+                                : 
+                                (
+                                    schedule.vacancies > 0 ? 
+                                    ( 
+
+                                        <li  className="caixa" onClick={() => handleClickOpen(schedule.id)}>
+                                            <p><b>{schedule.ranger_time}</b></p>
+                                            <p>{schedule.vacancies} vagas</p>
+                                        </li> 
+                                    ) :
+                                    (   
+                                        <li  className="caixa unavailable">
+                                            <p><b>{schedule.ranger_time}</b></p>
+                                            <p>{schedule.vacancies} vagas</p>
+                                        </li> 
+                                    ) 
+                                )
+                            )) }
+                        </ul>
+                    ) : (
+                        <p id="description-laboratories">Selecione um laborátorio.</p>
+                    )
+                }
             </main>
             <div>
                 <Dialog
@@ -81,7 +214,7 @@ const Reservation: React.FC = () => {
                     </DialogTitle>
                     <DialogContent>
                     <DialogContentText  id="alert-dialog-description">
-                        <p>Deseja confirmar sua vaga para o horário <b>07:00 - 08:00</b>?</p>
+                        <p>Deseja confirmar sua vaga para o horário <b>{selectSchedules?.ranger_time}</b>?</p>
                     </DialogContentText>
                     </DialogContent>
                     <DialogActions>
@@ -89,6 +222,30 @@ const Reservation: React.FC = () => {
                         Sair
                     </Button>
                     <Button onClick={handleConfirm} id="btn-confirm-modal">
+                        Confirmar
+                    </Button>
+                    </DialogActions>
+                </Dialog>
+
+                <Dialog
+                    open={openDelete}
+                    onClose={handleClose}
+                    aria-labelledby="alert-dialog-title"
+                    aria-describedby="alert-dialog-description"
+                >
+                    <DialogTitle id="alert-dialog-title">
+                        <p>Cancelar a reserva</p>
+                    </DialogTitle>
+                    <DialogContent>
+                    <DialogContentText  id="alert-dialog-description">
+                        <p>Deseja confirmar a exclução da vaga para o horário <b>{selectSchedules?.ranger_time}</b>?</p>
+                    </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                    <Button onClick={handleClose} id="btn-exit-modal" color="secondary">
+                        Sair
+                    </Button>
+                    <Button onClick={handleConfirmDelete} id="btn-confirm-modal">
                         Confirmar
                     </Button>
                     </DialogActions>
