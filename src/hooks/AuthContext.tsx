@@ -5,7 +5,8 @@ interface User {
   id: string;
   name: string;
   course_id: string;
-  registration: string;
+  phone: string;
+  cpf: string;
   user_type_id: number;
 }
 
@@ -15,7 +16,7 @@ interface AuthState {
 }
 
 interface SignInCredetials {
-  registration: string;
+  cpf: string;
   password: string;
 }
 
@@ -44,9 +45,9 @@ export const AuthProvider: React.FC = ({ children }) => {
     return {} as AuthState;
   });
 
-  const signIn = useCallback(async ({ registration, password }) => { 
+  const signIn = useCallback(async ({ cpf, password }) => { 
     const response = await api.post("/auth", {
-      registration,
+      cpf,
       password,
     });
     const { user } = response.data;

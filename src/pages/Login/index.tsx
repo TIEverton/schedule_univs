@@ -1,10 +1,8 @@
-import React, { useCallback, useRef } from "react";
-import { Link } from "react-router-dom";
+import React, { ChangeEvent, useCallback, useRef, useState } from "react";
 
 import logoImg from '../../assets/images/logo.svg';
 import landingImg from '../../assets/images/landing.svg';
 import './styles.css';
-import purpleHeartIcon from '../../assets/images/icons/purple-heart.svg';
 
 import { FormHandles } from "@unform/core";
 import { Form } from "@unform/web";
@@ -16,10 +14,8 @@ import { useToast } from "../../hooks/ToastContext";
 
 import Input from "../../components/Input";
 
-import api from '../../services/api';
-
 interface FormAttributes {
-  registration: string;
+  cpf: string;
   password: string;
 }
 
@@ -28,6 +24,16 @@ const Login: React.FC = () => {
 
   const { signIn } = useAuth();
   const { addToast } = useToast();
+  const [formData, setFormData] = useState({cpf: ''})
+
+  function handleInputChange(event:  ChangeEvent<HTMLInputElement>) {
+    const { id, value} = event.target;
+    setFormData({ ...formData, [id]: value });
+    if( id === "cpf"){
+      const mask = value.replace(/\D/g, '').replace(/^(\d{3})(\d{3})?(\d{3})?(\d{2})?/, "$1.$2.$3-$4");
+      setFormData({ ...formData, [id]: mask });
+    }
+  } 
 
   const handleSubmit = useCallback(
     async (data: FormAttributes) => {
@@ -35,8 +41,7 @@ const Login: React.FC = () => {
         formRef.current?.setErrors({});
 
         const schema = Yup.object().shape({
-          registration: Yup.string()
-            .required("registration obrigatório"),
+          cpf: Yup.string().required("CPF obrigatório"),
           password: Yup.string().required("Senha obrigatória"),
         });
 
@@ -45,7 +50,7 @@ const Login: React.FC = () => {
         });
 
         await signIn({
-          registration: data.registration,
+          cpf: data.cpf,
           password: data.password,
         });
 
@@ -59,10 +64,10 @@ const Login: React.FC = () => {
         addToast({
           type: "error",
           title: "Erro na autenticação",
-          description: "Matrícula ou senha incorreta!",
+          description: "CPF ou senha incorreto",
         });
       }
-    }, [addToast]
+    }, [addToast, signIn]
   );
 
     return (
@@ -73,8 +78,16 @@ const Login: React.FC = () => {
                     <h2>Faça seu login</h2>
                     <div className="form-login">
                         <Form onSubmit={handleSubmit} ref={formRef}>
-                            <Input name="registration" placeholder="Digite sua matrícula" type="text"></Input>
-                            <Input name="password" placeholder="Digite sua senha" type="password"></Input>
+                            <Input 
+                              value={formData.cpf} 
+                              name="cpf" 
+                              id="cpf" 
+                              maxLength={14} 
+                              placeholder="Digite seu CPF" 
+                              onChange={handleInputChange} 
+                              type="text" 
+                            />
+                            <Input name="password" placeholder="Digite sua senha" type="password" />
                             <button type="submit"> ENTRAR</button>
                         </Form>
                     </div>
@@ -91,7 +104,7 @@ const Login: React.FC = () => {
                 </div>
 
                 <span className="total-connections">
-                    Feito com <img src={purpleHeartIcon} alt="coração roxo"/> por <a target="_blank" href="https://instagram.com/evertonti"> Everton</a> e <a target="_blank" href="https://instagram.com/xpaulocesarx"> Paulo</a>
+                    Todos os direitos <a target="_blank" rel="noopener noreferrer" href="https://univs.edu.br"> &copy; UniVS</a>
                 </span>
             </div>
         </div>

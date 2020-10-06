@@ -8,7 +8,6 @@ import landingImg from '../../assets/images/landing.svg';
 
 import loginIcon from '../../assets/images/icons/login.svg';
 import rocketIcon from '../../assets/images/icons/rocket.svg';
-import purpleHeartIcon from '../../assets/images/icons/purple-heart.svg';
 
 function Landing() {
     return (
@@ -16,9 +15,9 @@ function Landing() {
             <div id="page-landing-content" className="container">
                 <div className="logo-container">
                     <img src={logoImg} alt="UniVS" />
-                    <h2>Agende sua vaga agora mesmo.</h2>
+                    <h2>Agende sua vaga agora mesmo</h2>
                 </div>
-
+                
                 <img 
                     src={landingImg}
                     alt="Plataforma de agendamento."
@@ -39,7 +38,7 @@ function Landing() {
                 </div>
 
                 <span className="total-connections">
-                    Feito com <img src={purpleHeartIcon} alt="coração roxo"/> por <a target="_blank" href="https://instagram.com/evertonti"> Everton</a> e <a target="_blank" href="https://instagram.com/xpaulocesarx"> Paulo</a>
+                    Todos os direitos <a target="_blank" rel="noopener noreferrer" href="https://univs.edu.br"> &copy; UniVS</a>
                 </span>
             </div>
         </div>

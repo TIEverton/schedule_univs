@@ -23,6 +23,11 @@ interface ItemLaboratory {
     name: string;
 }
 
+interface ItemDay {
+    id: number;
+    name: string;
+}
+
 interface ItemSchedule {
     id: number;
     laboratory_id: string,
@@ -34,10 +39,12 @@ interface ItemSchedule {
 const Reservation: React.FC = () => {
     const { signOut, user } = useAuth();
     const { addToast } = useToast();
+    var data = new Date();
     const [open, setOpen] = useState(false);
     const [openDelete, setOpenDelete] = useState(false);
 
-    const [nameSemana, setNameSemana] = useState('');
+    const [semana, setSemana] = useState<ItemDay[]>([]);
+    const [selectDay, setSelectDay] = useState<number>(0);
 
     const [selectLaboratories, setSelectLaboratories] = useState<number>(0);
     const [laboratories, setLaboratories] = useState<ItemLaboratory[]>([]);
@@ -56,16 +63,21 @@ const Reservation: React.FC = () => {
 
     useEffect(() => {
         async function loadSchedule() {
-            const response = await api.get(`reservations/${selectLaboratories}`);
+            const response = await api.get(`reservations/${selectLaboratories}/${selectDay}`);
             setSchedules(response.data);
         }
 
         loadSchedule();
-    }, [selectLaboratories]);
+    }, [selectLaboratories, selectDay]);
 
     function handleLaboratory(event:  ChangeEvent<HTMLSelectElement>){
         const id = event.target.value;
         setSelectLaboratories(parseInt(id));
+    }
+
+    function handleDay(event:  ChangeEvent<HTMLSelectElement>){
+        const id = event.target.value;
+        setSelectDay(parseInt(id));
     }
 
     function handleClickOpen(id: number) {
@@ -93,8 +105,11 @@ const Reservation: React.FC = () => {
 
     async function handleConfirm() {
         try {
-            await api.post('reservations', { schedule_id: selectSchedules?.id });
-            const resp = await api.get(`reservations/${selectSchedules?.laboratory_id}`);
+            await api.post('reservations', { 
+                schedule_id: selectSchedules?.id,
+                day_id: selectDay
+            });
+            const resp = await api.get(`reservations/${selectSchedules?.laboratory_id}/${selectDay}`);
             setSchedules(resp.data);
             setOpen(false);
 
@@ -115,11 +130,11 @@ const Reservation: React.FC = () => {
     async function handleConfirmDelete() {
         try {
             const deleteMessage = await api.delete(`reservations/${selectSchedules?.id}`);
-            const resp = await api.get(`reservations/${selectSchedules?.laboratory_id}`);
+            const resp = await api.get(`reservations/${selectSchedules?.laboratory_id}/${selectDay}`);
             setSchedules(resp.data);
             setOpenDelete(false);
             addToast({
-                type: "success",
+                type: "error",
                 title: "Horário excluído",
                 description: deleteMessage.data.message,
             });
@@ -130,17 +145,44 @@ const Reservation: React.FC = () => {
             });
         }
     }
-
-    var data = new Date();
-    var dias = new Array(
-     'Domingo', 'Segunda', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'
-    );
     
-    var nomeSemana = dias[data.getDay()]
+    useEffect(() => {
+        const semana = new Array<ItemDay>(
+            {id: 1, name: 'Segunda-feira'},
+            {id: 2, name: 'Terça-feira'},
+            {id: 3, name: 'Quarta-feira'},
+            {id: 4, name: 'Quinta-feira'},
+            {id: 5, name: 'Sexta-feira'},
+        );
 
-    useEffect( () => {
-        setNameSemana(nomeSemana);
+        const day_id = data.getDay();
+        const hora = data.getHours();
+
+        var semanaFilter = new Array<ItemDay>()
+        var i = 0;
+
+        semana.map(day => {
+            if(hora < 17){
+                if (day.id >= day_id) {
+                    semanaFilter[i] = day;
+                    i++;
+                }
+            }else{
+                if (day.id > day_id) {
+                    semanaFilter[i] = day;
+                    i++;
+                }
+            }
+        });
+
+        setSemana(semanaFilter);
     }, []);
+    
+    //var nomeSemana = dias[data.getDay()]
+
+    // useEffect( () => {
+    //     setNameSemana(nomeSemana);
+    // }, []);
 
     return (
         <div id="page-reservation" className="container">
@@ -160,7 +202,13 @@ const Reservation: React.FC = () => {
             </header>
             <main>
                 <div className="main-item-menu">
-                    <p id="name-week">Hoje é <b> {nameSemana}</b></p>
+                    <select onChange={ handleDay } value={selectDay}>
+                        <option value={0}> Selecione aqui o dia</option>
+                            { semana.map(day => (
+                                <option key={day.id} value={day.id}>{day.name}</option>
+                            ))}
+                    </select>
+
                     <select onChange={ handleLaboratory } value={selectLaboratories}>
                         <option value={0}> Selecione aqui o laborátorio</option>
                             { laboratories.map(laboratory => (
@@ -169,7 +217,7 @@ const Reservation: React.FC = () => {
                     </select>
                 </div>
                 {
-                    selectLaboratories !== 0 ? (
+                    selectLaboratories !== 0 && selectDay !== 0 ? (
                         <ul className="main-content-reservation">
                             { schedules.map(schedule => (
                                 schedule.users.length > 0 ? (
@@ -198,7 +246,7 @@ const Reservation: React.FC = () => {
                             )) }
                         </ul>
                     ) : (
-                        <p id="description-laboratories">Selecione um laborátorio.</p>
+                        <p id="description-laboratories">Selecione um horário e um laborátorio.</p>
                     )
                 }
             </main>

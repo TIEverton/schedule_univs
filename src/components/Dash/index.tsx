@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useCallback, useEffect, useState } from 'react';
+import React, { ChangeEvent, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import './styles.css';
@@ -18,11 +18,15 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
-import Divider from '@material-ui/core/Divider';
 import Delete from '@material-ui/icons/Delete';
 
 interface ItemLaboratory {
     id: string;
+    name: string;
+}
+
+interface ItemDay {
+    id: number;
     name: string;
 }
 
@@ -35,15 +39,18 @@ interface ItemSchedule {
 interface ItemUser {
     id: number;
     name: string;
-    registration: string;
+    cpf: string;
 }
 
 const Dash: React.FC = () => {
     const { signOut, user } = useAuth();
     const { addToast } = useToast();
     const [open, setOpen] = useState(false);
-    const [selectedHours, setSelectedHours] = useState(false);
-    const [nameSemana, setNameSemana] = useState('');
+
+    var data = new Date();
+
+    const [semana, setSemana] = useState<ItemDay[]>([]);
+    const [selectDay, setSelectDay] = useState<number>(data.getDay());
 
     const [selectLaboratories, setSelectLaboratories] = useState<number>(1);
     const [laboratories, setLaboratories] = useState<ItemLaboratory[]>([]);
@@ -64,12 +71,12 @@ const Dash: React.FC = () => {
 
     useEffect(() => {
         async function loadSchedule() {
-            const response = await api.get(`laboratories/${selectLaboratories}`);
+            const response = await api.get(`laboratories/${selectLaboratories}/${selectDay}`);
             setSchedules(response.data)
         }
 
         loadSchedule();
-    }, [selectLaboratories]);
+    }, [selectLaboratories, selectDay]);
 
     function handleLaboratory(event:  ChangeEvent<HTMLSelectElement>){
         const id = event.target.value;
@@ -109,21 +116,27 @@ const Dash: React.FC = () => {
             });
         }
     }
+
+    function handleDay(event:  ChangeEvent<HTMLSelectElement>){
+        const id = event.target.value;
+        setSelectDay(parseInt(id));
+    }
   
+    useEffect(() => {
+        const semana = new Array<ItemDay>(
+            {id: 1, name: 'Segunda-feira'},
+            {id: 2, name: 'Terça-feira'},
+            {id: 3, name: 'Quarta-feira'},
+            {id: 4, name: 'Quinta-feira'},
+            {id: 5, name: 'Sexta-feira'},
+        );
+
+        setSemana(semana);
+    }, []);
+
     function handleClose() {
       setOpen(false);
     };
-
-    var data = new Date();
-    var dias = new Array(
-     'Domingo', 'Segunda', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'
-    );
-    
-    var nomeSemana = dias[data.getDay()]
-
-    useEffect( () => {
-        setNameSemana(nomeSemana);
-    }, []);
 
     return (
         <div id="page-reservation" className="container">
@@ -143,7 +156,12 @@ const Dash: React.FC = () => {
             </header>
             <main>
                 <div className="main-item-menu">
-                    <p id="name-week">Hoje é <b> {nameSemana}</b></p>
+                    <select onChange={ handleDay } value={selectDay}>
+                            { semana.map(day => (
+                                <option key={day.id} value={day.id}>{day.name}</option>
+                            ))}
+                    </select>
+
                     <select onChange={ handleLaboratory } value={selectLaboratories}>
                         { laboratories.map(laboratory => (
                             <option key={laboratory.id} value={laboratory.id}>{laboratory.name}</option>
@@ -151,7 +169,7 @@ const Dash: React.FC = () => {
                     </select>
                 </div>
                 {
-                selectLaboratories !== 0 ? (
+                selectLaboratories !== 0 && selectDay !== 0 ? (
                     <ul className="main-content-reservation">
                         { schedules.map(schedule => (
                             <li key={schedule.id} className="caixa" id="caixa1" onClick={() => handleClickOpen(schedule.id)}>
@@ -161,7 +179,7 @@ const Dash: React.FC = () => {
                         ))}
                     </ul>
                 ) : (
-                    <p id="description-laboratories">Selecione um laborátorio.</p>
+                    <p id="description-laboratories">Selecione um horário e um laborátorio.</p>
                 )
                 }
             </main>
@@ -183,7 +201,7 @@ const Dash: React.FC = () => {
                                     <div className="container-user-list" key={user.id}>
                                         <div>
                                             <p><b>Nome:</b> {user.name}</p>
-                                            <p><b>Matrícula:</b> {user.registration}</p>
+                                            <p><b>CPF:</b> {user.cpf}</p>
                                         </div>
                                         <div className="button-container-list">
                                             <Button onClick={() => handleCancelReservation(user.id)} variant="contained" color="secondary">

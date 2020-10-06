@@ -1,5 +1,5 @@
 import React, { ChangeEvent, useEffect, useRef, useState } from 'react';
-import { Link, useHistory } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 
 import './styles.css';
 
@@ -13,7 +13,6 @@ import getValidationErrors from "../../utils/getValidationErrors";
 import { useAuth } from "../../hooks/AuthContext";
 import { useToast } from "../../hooks/ToastContext";
 
-import purpleHeartIcon from '../../assets/images/icons/purple-heart.svg';
 import Input from "../../components/Input";
 
 import api from '../../services/api';
@@ -25,9 +24,10 @@ interface ItemCategory {
 
 interface FormAttributes {
     name: String;
-    registration: string;
+    cpf: string;
     password: string;
     course_id: number;
+    phone: string;
 }
 
 const Register: React.FC = () => {
@@ -37,6 +37,17 @@ const Register: React.FC = () => {
     const formRef = useRef<FormHandles>(null);
     const [selectCourses, setSelectCourses] = useState<number>(0);
     const [courses, setCourses] = useState<ItemCategory[]>([]);
+
+    const [formData, setFormData] = useState({cpf: ''})
+
+    function handleInputChange(event:  ChangeEvent<HTMLInputElement>) {
+      const { id, value} = event.target;
+      setFormData({ ...formData, [id]: value });
+      if( id === "cpf"){
+        const mask = value.replace(/\D/g, '').replace(/^(\d{3})(\d{3})?(\d{3})?(\d{2})?/, "$1.$2.$3-$4");
+        setFormData({ ...formData, [id]: mask });
+      }
+    } 
 
     useEffect(() => {
         api.get('courses').then(response => {
@@ -56,7 +67,8 @@ const Register: React.FC = () => {
 
             const schema = Yup.object().shape({
                 name: Yup.string().required("É necessário um nome"),
-                registration: Yup.string().required("É necessário uma matrícula"), 
+                cpf: Yup.string().required("É necessário um CPF"), 
+                phone: Yup.string().required("É necessário um Telefone"), 
                 password: Yup.string().required("É necessário uma senha").min(6, "Mínimo 6 dígitos!"), 
             });
 
@@ -68,14 +80,15 @@ const Register: React.FC = () => {
                 name: data.name,
                 password: data.password,
                 password_confirmation: data.password,
-                registration: data.registration,
+                phone: data.phone,
+                cpf: data.cpf,
                 course_id: selectCourses
             }
 
             await api.post('register', register);
 
             await signIn({
-                registration: data.registration,
+                cpf: data.cpf,
                 password: data.password,
             });
             
@@ -102,15 +115,25 @@ const Register: React.FC = () => {
                     <h2>Faça seu cadastro</h2>
                     <div className="form-register">
                         <Form onSubmit={handleSubmit} className="form" ref={formRef}>
-                            <Input placeholder="Digite seu nome" type="text" id="name" name="name"></Input>
-                            <Input placeholder="Digite sua matrícula" type="text" id="registration" name="registration"></Input>
-                            <Input placeholder="Digite uma senha" type="password" id="password" name="password"></Input>
-                            <select id="courses" onChange={ handleCourses } value={selectCourses} name="courses">
-                                <option value={0}> Selecione um curso</option>
-                                { courses.map(courses => (
-                                    <option key={courses.id} value={courses.id}>{courses.name}</option>
-                                )) }
-                            </select>
+                            <div className="scroll">
+                                <Input placeholder="Digite seu nome" type="text" id="name" name="name"></Input>
+                                <Input 
+                                    value={formData.cpf} 
+                                    name="cpf" 
+                                    id="cpf" 
+                                    maxLength={14} 
+                                    placeholder="Digite seu CPF" 
+                                    onChange={handleInputChange} 
+                                    type="text" 
+                                />                                <Input placeholder="Digite uma senha" type="password" id="password" name="password"></Input>
+                                <Input placeholder="Digite seu telefone" type="text" id="phone" name="phone"></Input>
+                                <select id="courses" onChange={ handleCourses } value={selectCourses} name="courses">
+                                    <option value={0}> Selecione um curso</option>
+                                    { courses.map(courses => (
+                                        <option key={courses.id} value={courses.id}>{courses.name}</option>
+                                    )) }
+                                </select>
+                            </div>
                             <button type="submit">CADASTRAR</button>
                         </Form>
                     </div>
@@ -126,9 +149,8 @@ const Register: React.FC = () => {
 
                 </div>
 
-
                 <span className="total-connections">
-                    Feito com <img src={purpleHeartIcon} alt="coração roxo"/> por <a target="_blank" href="https://instagram.com/evertonti"> Everton</a> e <a target="_blank" href="https://instagram.com/xpaulocesarx"> Paulo</a>
+                    Todos os direitos <a target="_blank" rel="noopener noreferrer" href="https://univs.edu.br"> &copy; UniVS</a>
                 </span>
             </div>
         </div>
