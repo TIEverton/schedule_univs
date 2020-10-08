@@ -38,7 +38,7 @@ const Register: React.FC = () => {
     const [selectCourses, setSelectCourses] = useState<number>(0);
     const [courses, setCourses] = useState<ItemCategory[]>([]);
 
-    const [formData, setFormData] = useState({cpf: ''})
+    const [formData, setFormData] = useState({cpf: '', phone: ''})
 
     function handleInputChange(event:  ChangeEvent<HTMLInputElement>) {
       const { id, value} = event.target;
@@ -46,7 +46,11 @@ const Register: React.FC = () => {
       if( id === "cpf"){
         const mask = value.replace(/\D/g, '').replace(/^(\d{3})(\d{3})?(\d{3})?(\d{2})?/, "$1.$2.$3-$4");
         setFormData({ ...formData, [id]: mask });
-      }
+      } else if (id === "phone") {
+        const mask = value.replace(/\D/g, '').replace(/^(\d{2})(\d{5})?(\d{4})?/, "($1)$2-$3");
+        setFormData({ ...formData, [id]: mask });
+      } 
+  
     } 
 
     useEffect(() => {
@@ -125,8 +129,17 @@ const Register: React.FC = () => {
                                     placeholder="Digite seu CPF" 
                                     onChange={handleInputChange} 
                                     type="text" 
-                                />                                <Input placeholder="Digite uma senha" type="password" id="password" name="password"></Input>
-                                <Input placeholder="Digite seu telefone" type="text" id="phone" name="phone"></Input>
+                                />                                
+                                <Input placeholder="Digite uma senha" type="password" id="password" name="password"></Input>
+                                <Input 
+                                    placeholder="Digite seu telefone" 
+                                    value={formData.phone}
+                                    onChange={handleInputChange} 
+                                    type="text" 
+                                    id="phone" 
+                                    name="phone"
+                                    maxLength={14} 
+                                />
                                 <select id="courses" onChange={ handleCourses } value={selectCourses} name="courses">
                                     <option value={0}> Selecione um curso</option>
                                     { courses.map(courses => (
